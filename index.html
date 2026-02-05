@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>William Russell | Mechanical Engineering Portfolio</title>
+    
+    <!-- Performance Hints: Connect to CDNs early -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://res.cloudinary.com">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM (Production versions for UMD compatibility) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (for compiling JSX in the browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Custom scrollbar to match the theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        .modal-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .modal-scroll::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 3px;
+        }
+        /* Hide scrollbar for gallery thumbnails */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Access React functions from the global object
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // Icon Definitions (Inline to prevent library loading errors)
+        const Icon = ({ children, size = 24, strokeWidth = 2, className, ...props }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width={size} 
+                height={size} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth={strokeWidth} 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className} 
+                {...props}
+            >
+                {children}
+            </svg>
+        );
+
+        const Menu = (props) => <Icon {...props}><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></Icon>;
+        const X = (props) => <Icon {...props}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></Icon>;
+        const Linkedin = (props) => <Icon {...props}><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></Icon>;
+        const Mail = (props) => <Icon {...props}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></Icon>;
+        const Phone = (props) => <Icon {...props}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></Icon>;
+        const Wrench = (props) => <Icon {...props}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></Icon>;
+        const Cpu = (props) => <Icon {...props}><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></Icon>;
+        const Users = (props) => <Icon {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></Icon>;
+        const Monitor = (props) => <Icon {...props}><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></Icon>;
+        const ChevronRight = (props) => <Icon {...props}><path d="m9 18 6-6-6-6"/></Icon>;
+        const ChevronLeft = (props) => <Icon {...props}><path d="m15 18-6-6 6-6"/></Icon>;
+        const Briefcase = (props) => <Icon {...props}><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></Icon>;
+        const GraduationCap = (props) => <Icon {...props}><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></Icon>;
+        const Hammer = (props) => <Icon {...props}><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V7.86c0-.55-.45-1-1-1H14.14c-.83 0-1.64.32-2.25.92L9.62 10.1"/></Icon>;
+        const CircuitBoard = (props) => <Icon {...props}><rect x="14" y="14" width="8" height="8" rx="2"/><path d="M4 9V7a2 2 0 0 1 2-2h2"/><path d="M8 19h2"/><path d="M20 14v-3"/><path d="M20 9V7a2 2 0 0 0-2-2h-2"/><circle cx="15" cy="5" r="1"/><circle cx="9" cy="20" r="1"/></Icon>;
+        const Terminal = (props) => <Icon {...props}><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></Icon>;
+        const Bike = (props) => <Icon {...props}><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5V14l-3-3 4-3 2 3h2"/></Icon>;
+        const CheckCircle2 = (props) => <Icon {...props}><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></Icon>;
+        const RollerCoaster = (props) => <Icon {...props}><path d="M6 19V5"/><path d="M10 19V6.8"/><path d="M14 19v-7.8"/><path d="M18 5v4"/><path d="M18 19v-6"/><path d="M22 19V9"/><path d="M2 19V9a4 4 0 0 1 4-4c2 0 4 1.33 6 4s4 4 6 4a4 4 0 1 0 4-4"/></Icon>;
+        const Bot = (props) => <Icon {...props}><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></Icon>;
+        const Gamepad2 = (props) => <Icon {...props}><line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></Icon>;
+        const Ship = (props) => <Icon {...props}><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.9 5.8 2.2 8"/><path d="M5 10l7-4 7 4"/><path d="M8.98 13.8c.07.95.62 3.03 3.02 3.03 2.4 0 2.95-2.08 3.02-3.03"/></Icon>;
+        const Gauge = (props) => <Icon {...props}><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></Icon>;
+        const Download = (props) => <Icon {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></Icon>;
+        const FileText = (props) => <Icon {...props}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></Icon>;
+        const Play = (props) => <Icon {...props}><polygon points="5 3 19 12 5 21 5 3"/></Icon>;
+
+        const App = () => {
+            const [isMenuOpen, setIsMenuOpen] = useState(false);
+            const [scrolled, setScrolled] = useState(false);
+            const [activeSection, setActiveSection] = useState('home');
+            const [selectedProject, setSelectedProject] = useState(null);
+            const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+
+            // OPTIMIZATION: IntersectionObserver for efficient scroll tracking
+            useEffect(() => {
+                const observerOptions = {
+                    root: null,
+                    rootMargin: '-20% 0px -60% 0px', // Trigger when section is in middle of viewport
+                    threshold: 0
+                };
+
+                const observerCallback = (entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting) {
+                            setActiveSection(entry.target.id);
+                        }
+                    });
+                };
+
+                const observer = new IntersectionObserver(observerCallback, observerOptions);
+                const sections = ['home', 'skills', 'projects', 'resume', 'experience', 'contact'];
+                
+                sections.forEach((id) => {
+                    const element = document.getElementById(id);
+                    if (element) observer.observe(element);
+                });
+
+                return () => observer.disconnect();
+            }, []);
+
+            // OPTIMIZATION: Debounce/Throttle scroll event for navbar background styling
+            useEffect(() => {
+                const handleScroll = () => {
+                    const isScrolled = window.scrollY > 50;
+                    // Only update state if it changes to avoid re-renders
+                    if (isScrolled !== scrolled) {
+                        setScrolled(isScrolled);
+                    }
+                };
+
+                // Attach listener
+                window.addEventListener('scroll', handleScroll, { passive: true });
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, [scrolled]); // Dependencies ensure we have access to latest state but logic prevents loop
+
+            // Reset media index when opening a new project
+            useEffect(() => {
+                if (selectedProject) {
+                    setCurrentMediaIndex(0);
+                }
+            }, [selectedProject]);
+
+            const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+            const nextMedia = (e) => {
+                e.stopPropagation();
+                if (!selectedProject) return;
+                setCurrentMediaIndex((prev) => 
+                    prev === selectedProject.media.length - 1 ? 0 : prev + 1
+                );
+            };
+
+            const prevMedia = (e) => {
+                e.stopPropagation();
+                if (!selectedProject) return;
+                setCurrentMediaIndex((prev) => 
+                    prev === 0 ? selectedProject.media.length - 1 : prev - 1
+                );
+            };
+
+            const navLinks = [
+                { name: 'Skills', href: '#skills' },
+                { name: 'Projects', href: '#projects' },
+                { name: 'Resume', href: '#resume' },
+                { name: 'Experience', href: '#experience' },
+            ];
+
+            const projectsData = [
+                {
+                    id: 1,
+                    title: "Arcade Claw Machine",
+                    role: "Project Lead",
+                    date: "Sep 2025 - Present",
+                    icon: Gamepad2,
+                    color: "blue",
+                    status: "In Progress",
+                    description: "Leading the development of a fully functional arcade machine.",
+                    details: [
+                        "Developing mechanical architecture and SolidWorks models for a 3-axis rail system.",
+                        "Directing technical reviews and sub-team integration via mechanical analysis to ensure system compatibility.",
+                        "Managing fabrication workflows using 3D printing and laser cutting for mechanism validation."
+                    ],
+                    media: [
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312204/exterior_zpkwxn.png",
+                            caption: ""
+                        },
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312204/image_claw_fxntwd.png",
+                            caption: ""
+                        },
+                        {
+                            type: "video",
+                            url: "https://res.cloudinary.com/dffo9kuhp/video/upload/v1770312205/Recording_2025-11-05_224725_v3vstv.mp4",
+                            caption: ""
+                        },
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312204/Screenshot_2025-11-06_212947_kovaak.png",
+                            caption: ""
+                        },
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312204/Claw_Machine_Theming_Case_Model_V1_afrmwq.png",
+                            caption: ""
+                        },
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312204/image_games_ryyfie.png",
+                            caption: ""
+                        }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: "ASME SumoBots",
+                    role: "Project Lead",
+                    date: "Aug 2025 - Nov 2025",
+                    icon: Bot,
+                    color: "amber",
+                    status: "Completed",
+                    description: "Competition leadership role coordinating timeline optimization and technical workshops.",
+                    details: [
+                        "Coordinated and optimized project timeline ensuring members had functional bots on competition day.",
+                        "Organized workshops focused on teaching members technical skills related to the competition.",
+                        "Performed product analysis, ensuring 100% functionality and compliance with competition regulations."
+                    ],
+                    media: [
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312217/IMG_0660_zthedo.jpg",
+                            caption: ""
+                        },
+                        {
+                            type: "video",
+                            url: "https://res.cloudinary.com/dffo9kuhp/video/upload/v1770312220/IMG_0680_qsvoch.mov",
+                            caption: ""
+                        },
+                        {
+                            type: "video",
+                            url: "https://res.cloudinary.com/dffo9kuhp/video/upload/v1770312220/IMG_0661_ypxn2v.mov",
+                            caption: ""
+                        },
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312218/IMG_0669_hrrqag.jpg",
+                            caption: ""
+                        },
+                        {
+                            type: "video",
+                            url: "https://res.cloudinary.com/dffo9kuhp/video/upload/v1770312218/IMG_0684_vz2tyg.mov",
+                            caption: ""
+                        },
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312218/IMG_0692_usmmfy.jpg",
+                            caption: ""
+                        }
+                    ]
+                },
+                {
+                    id: 3,
+                    title: "CyberDuck Amphibious Robot",
+                    role: "Terrestrial Team-Lead",
+                    date: "Sep 2024 - Apr 2025",
+                    icon: Ship,
+                    color: "blue",
+                    status: "Completed",
+                    description: "Led a multidisciplinary team to engineer a movement system under a strict budget.",
+                    details: [
+                        "Led a multidisciplinary team of 13 to engineer a terrestrial movement system under a strict $150 budget.",
+                        "Conducted cost-risk analysis and feasibility studies to ensure mission completion within resource margins.",
+                        "Performed stress analysis on walking mechanisms to validate structural integrity under operational loads.",
+                        "Optimized walking mechanism geometry in SolidWorks for enhanced stability across varied terrains.",
+                        "Resolved a critical spatial constraint conflict by collaborating with the Exterior Sub-team to redesign hull."
+                    ],
+                    media: [
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312210/IMG_5750_g6myip.jpg",
+                            caption: ""
+                        },
+                        {
+                            type: "video",
+                            url: "https://res.cloudinary.com/dffo9kuhp/video/upload/v1770312210/IMG_5902_1_mfgqcj.mov",
+                            caption: ""
+                        },
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312211/IMG_5755_fhu6xe.jpg",
+                            caption: ""
+                        },
+                        {
+                            type: "video",
+                            url: "https://res.cloudinary.com/dffo9kuhp/video/upload/v1770312209/IMG_5899_1_gaz7yh.mov",
+                            caption: ""
+                        },
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312210/IMG_5832_yz3lq5.jpg",
+                            caption: ""
+                        },
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312210/IMG_5754_hsytkq.jpg",
+                            caption: ""
+                        }
+                    ]
+                },
+                {
+                    id: 4,
+                    title: "1967 Honda CL77 Restoration",
+                    role: "Mechanic",
+                    date: "Apr 2023 - Aug 2024",
+                    icon: Bike,
+                    color: "slate",
+                    status: "Completed",
+                    description: "Full-scale restoration of a vintage drivetrain with precision diagnostics and tuning.",
+                    details: [
+                        "Executed a full-scale restoration of a vintage drivetrain; performed precision diagnostics and tuning.",
+                        "Managed component sourcing and mechanical troubleshooting to return the vehicle to operational status."
+                    ],
+                    media: [
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312193/IMG_4049_arqxfr.jpg",
+                            caption: ""
+                        },
+                        {
+                            type: "video",
+                            url: "https://res.cloudinary.com/dffo9kuhp/video/upload/v1770312194/IMG_2870_vbkdn6.mov",
+                            caption: ""
+                        },
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312193/IMG_5464_wvinim.jpg",
+                            caption: ""
+                        },
+                        {
+                            type: "video",
+                            url: "https://res.cloudinary.com/dffo9kuhp/video/upload/v1770312193/IMG_4545_neriyx.mov",
+                            caption: ""
+                        },
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312193/67419094961__D928ED3D-5C57-4622-8091-04F27EF87B4C_oqhwsw.jpg",
+                            caption: ""
+                        },
+                        {
+                            type: "image",
+                            url: "https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770312193/68109308027__6B90DCDF-9F1D-4285-8B5E-011E002F7334_rdwaxb.jpg",
+                            caption: ""
+                        }
+                    ]
+                }
+            ];
+
+            return (
+                <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-600 selection:text-white">
+                
+                {/* Navigation */}
+                <nav className={`fixed w-full z-40 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md border-b-2 border-slate-900 py-3 shadow-none' : 'bg-transparent py-6'}`}>
+                    <div className="w-full px-6 md:px-12 flex justify-between items-center">
+                    <a href="#home" className="text-3xl font-black tracking-tighter text-slate-900 flex items-center gap-2 uppercase">
+                        {/* Roller Coaster Icon Removed */}
+                        WR<span className="text-blue-600">.</span>
+                    </a>
+
+                    {/* Desktop Nav */}
+                    <div className="hidden md:flex items-center gap-10">
+                        {navLinks.map((link) => (
+                        <a 
+                            key={link.name} 
+                            href={link.href} 
+                            className="text-sm font-extrabold text-slate-700 hover:text-blue-600 transition-colors relative group uppercase tracking-widest"
+                        >
+                            {link.name}
+                            <span className={`absolute -bottom-1 left-0 h-1 bg-blue-600 transition-all duration-200 ${activeSection === link.href.substring(1) ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+                        </a>
+                        ))}
+                        <a 
+                        href="#contact"
+                        className="px-8 py-3 text-sm font-black text-white bg-blue-600 hover:bg-slate-900 rounded-none transition-all shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] uppercase tracking-wider border-2 border-slate-900"
+                        >
+                        Let's Talk
+                        </a>
+                    </div>
+
+                    {/* Mobile Menu Button */}
+                    <button onClick={toggleMenu} className="md:hidden text-slate-900 hover:text-blue-600 p-2" aria-label="Toggle Menu">
+                        {isMenuOpen ? <X size={32} strokeWidth={3} /> : <Menu size={32} strokeWidth={3} />}
+                    </button>
+                    </div>
+
+                    {/* Mobile Nav Overlay */}
+                    {isMenuOpen && (
+                    <div className="md:hidden absolute top-full left-0 w-full bg-white border-b-2 border-slate-900 p-6 flex flex-col gap-4 shadow-xl animate-in slide-in-from-top-5">
+                        <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2 text-center">Jump to Section</div>
+                        {navLinks.map((link) => (
+                        <a 
+                            key={link.name} 
+                            href={link.href} 
+                            onClick={() => setIsMenuOpen(false)}
+                            className="text-2xl font-black text-slate-900 hover:text-blue-600 border-b-2 border-slate-100 pb-3 uppercase text-center"
+                        >
+                            {link.name}
+                        </a>
+                        ))}
+                        <a 
+                        href="#contact"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="mt-4 text-center w-full py-4 bg-blue-600 text-white font-black uppercase tracking-wider border-2 border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+                        >
+                        Let's Talk
+                        </a>
+                    </div>
+                    )}
+                </nav>
+
+                {/* Project Detail Modal with Gallery */}
+                {selectedProject && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div 
+                            className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"
+                            onClick={() => setSelectedProject(null)}
+                        ></div>
+                        <div className="bg-white w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col relative z-10 border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] animate-in zoom-in-95 duration-200">
+                            
+                            <button 
+                                onClick={() => setSelectedProject(null)}
+                                className="absolute top-4 right-4 p-2 bg-white/90 backdrop-blur-sm border-2 border-slate-900 hover:bg-slate-100 z-50 rounded-full"
+                            >
+                                <X size={24} strokeWidth={3} />
+                            </button>
+
+                            <div className="flex flex-col md:flex-row h-full overflow-hidden">
+                                
+                                {/* Gallery Section (Left/Top) */}
+                                <div className="bg-slate-900 md:w-3/5 h-[300px] md:h-auto relative group select-none flex items-center justify-center">
+                                    {/* Main Media Display */}
+                                    <div className="w-full h-full relative flex items-center justify-center bg-black">
+                                        {selectedProject.media[currentMediaIndex].type === 'video' ? (
+                                            <video 
+                                                src={selectedProject.media[currentMediaIndex].url} 
+                                                /* Auto-generate poster from Cloudinary video URL by swapping extension to .jpg */
+                                                poster={selectedProject.media[currentMediaIndex].url.replace(/\.[^/.]+$/, ".jpg")}
+                                                controls 
+                                                className="w-full h-full object-contain"
+                                                playsInline
+                                            >
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        ) : (
+                                            <img 
+                                                src={selectedProject.media[currentMediaIndex].url} 
+                                                alt={selectedProject.title}
+                                                className="w-full h-full object-contain"
+                                                loading="lazy"
+                                            />
+                                        )}
+                                    </div>
+
+                                    {/* Carousel Controls */}
+                                    {selectedProject.media.length > 1 && (
+                                        <>
+                                            <button 
+                                                onClick={prevMedia}
+                                                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white text-slate-900 border-2 border-slate-900 transition-transform active:scale-95 z-20"
+                                            >
+                                                <ChevronLeft size={24} strokeWidth={3} />
+                                            </button>
+                                            <button 
+                                                onClick={nextMedia}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/90 hover:bg-white text-slate-900 border-2 border-slate-900 transition-transform active:scale-95 z-20"
+                                            >
+                                                <ChevronRight size={24} strokeWidth={3} />
+                                            </button>
+                                            
+                                            {/* Indicators */}
+                                            <div className="absolute bottom-4 left-0 w-full flex justify-center gap-2 z-20">
+                                                {selectedProject.media.map((_, idx) => (
+                                                    <button 
+                                                        key={idx}
+                                                        onClick={() => setCurrentMediaIndex(idx)}
+                                                        className={`w-3 h-3 border border-white shadow-sm transition-all ${
+                                                            idx === currentMediaIndex 
+                                                                ? 'bg-blue-600 scale-125' 
+                                                                : 'bg-white/50 hover:bg-white'
+                                                        }`}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {/* Status Badge */}
+                                    <div className={`absolute top-4 left-4 px-4 py-2 text-white font-black uppercase tracking-wider border-2 border-white/50 backdrop-blur-md z-20 text-sm ${
+                                        selectedProject.color === 'blue' ? 'bg-blue-600' : 
+                                        selectedProject.color === 'amber' ? 'bg-amber-600' : 'bg-slate-600'
+                                    }`}>
+                                        {selectedProject.status}
+                                    </div>
+
+                                    {/* Caption Overlay */}
+                                    {selectedProject.media[currentMediaIndex].caption && (
+                                        <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent pointer-events-none">
+                                            <p className="text-white font-bold text-center text-sm md:text-base drop-shadow-md pb-6 md:pb-0">
+                                                {selectedProject.media[currentMediaIndex].caption}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {/* Info Section (Right/Bottom) */}
+                                <div className="md:w-2/5 overflow-y-auto modal-scroll p-6 md:p-8 bg-white border-l-0 md:border-l-4 border-slate-900">
+                                    <div className="flex items-center gap-3 mb-4 text-slate-500 font-bold uppercase tracking-widest text-sm">
+                                        <selectedProject.icon size={20} strokeWidth={2.5} />
+                                        <span>{selectedProject.role}</span>
+                                    </div>
+                                    
+                                    <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-2 uppercase leading-none tracking-tight">
+                                        {selectedProject.title}
+                                    </h2>
+                                    
+                                    <p className="text-slate-500 font-bold mb-6 border-b-2 border-slate-100 pb-4">
+                                        {selectedProject.date}
+                                    </p>
+                                    
+                                    <div className="mb-8">
+                                        <p className="text-slate-900 font-bold text-lg mb-4 leading-relaxed">
+                                            {selectedProject.description}
+                                        </p>
+                                        <div className="space-y-3">
+                                            {selectedProject.details.map((detail, index) => (
+                                                <div key={index} className="flex gap-4">
+                                                    <div className="mt-1.5 min-w-[10px] h-[10px] bg-blue-600 rotate-45 border border-slate-900 flex-shrink-0"></div>
+                                                    <p className="text-slate-600 font-medium text-sm md:text-base leading-relaxed">
+                                                        {detail}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Thumbnails (Only if > 1 item) */}
+                                    {selectedProject.media.length > 1 && (
+                                        <div className="border-t-2 border-slate-100 pt-6">
+                                            <p className="text-xs font-black uppercase text-slate-400 mb-3 tracking-wider">Gallery View</p>
+                                            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                                                {selectedProject.media.map((item, idx) => (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => setCurrentMediaIndex(idx)}
+                                                        className={`relative h-16 w-16 flex-shrink-0 border-2 transition-all overflow-hidden ${
+                                                            idx === currentMediaIndex 
+                                                                ? 'border-blue-600 opacity-100 ring-2 ring-blue-600/20' 
+                                                                : 'border-slate-200 opacity-60 hover:opacity-100'
+                                                        }`}
+                                                    >
+                                                        {/* For video thumbnails, use the generated jpg cover. For images, use original url */}
+                                                        <img 
+                                                            src={item.type === 'video' ? item.url.replace(/\.[^/.]+$/, ".jpg") : item.url} 
+                                                            className="w-full h-full object-cover" 
+                                                            alt={`Thumbnail ${idx + 1}`}
+                                                            loading="lazy"
+                                                        />
+                                                        
+                                                        {/* Overlay Play icon for video types */}
+                                                        {item.type === 'video' && (
+                                                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
+                                                                <Play size={20} className="text-white drop-shadow-md" fill="white" />
+                                                            </div>
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Hero Section */}
+                <section id="home" className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 overflow-hidden min-h-[85vh] flex items-center bg-white">
+                    {/* Simple Technical Background Grid */}
+                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+                    
+                    <div className="absolute top-0 right-0 w-[800px] h-[800px] opacity-10 pointer-events-none">
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#2563EB" d="M44.7,-76.4C58.9,-69.2,71.8,-59.1,81.6,-46.7C91.4,-34.3,98.1,-19.6,95.8,-5.8C93.5,8,82.2,20.9,71.3,31.5C60.4,42.1,49.9,50.4,38.6,56.5C27.3,62.6,15.2,66.5,2.1,62.8C-11,59.1,-25.1,47.8,-37.8,37.3C-50.5,26.8,-61.8,17.1,-67.2,4.8C-72.6,-7.5,-72.1,-22.4,-64.3,-34.3C-56.5,-46.2,-41.4,-55.1,-27.6,-62.5C-13.8,-69.9,-1.3,-75.8,12.7,-77.8L14.7,-78.2" transform="translate(100 100)" />
+                        </svg>
+                    </div>
+                    
+                    <div className="container mx-auto max-w-5xl relative z-10 text-center">
+                        {/* New Headshot Image Added Here - Responsive Sizing (w-56 mobile, w-80 desktop) */}
+                        <div className="flex justify-center mb-12">
+                            <img 
+                                src="https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770313652/IMG_9862_thhofj.jpg" 
+                                alt="William Russell Headshot" 
+                                className="w-56 h-56 md:w-80 md:h-80 object-cover object-top rounded-full border-[6px] border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]"
+                                width="320"
+                                height="320"
+                                loading="eager"
+                                fetchpriority="high"
+                            />
+                        </div>
+
+                        <div className="inline-flex items-center gap-2 px-5 py-2 mb-8 bg-slate-900 text-white text-sm font-black tracking-widest uppercase transform -skew-x-12">
+                            Mechanical Engineering Portfolio
+                        </div>
+                        
+                        <h1 className="text-5xl sm:text-6xl lg:text-9xl font-black text-slate-900 leading-[0.9] mb-8 tracking-tighter">
+                        WILLIAM <br/>
+                        <span className="text-blue-600">RUSSELL</span>
+                        </h1>
+                        
+                        <p className="text-xl md:text-2xl text-slate-700 max-w-3xl mx-auto leading-relaxed font-bold mb-12">
+                        Mechanical Engineer specializing in CAD design, rapid prototyping, and complex system troubleshooting.
+                        </p>
+
+                        <div className="flex flex-col sm:flex-row justify-center gap-6">
+                        <a href="#projects" className="px-10 py-5 bg-blue-600 text-white font-black text-lg rounded-none shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all border-2 border-slate-900 uppercase tracking-wider flex items-center justify-center gap-3">
+                            View Projects <ChevronRight size={24} strokeWidth={3} />
+                        </a>
+                        <a href="https://www.linkedin.com/in/william-russell0904" target="_blank" rel="noreferrer" className="px-10 py-5 bg-white text-slate-900 font-black text-lg rounded-none shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all border-2 border-slate-900 uppercase tracking-wider flex items-center justify-center gap-3">
+                            <Linkedin size={24} strokeWidth={2.5} /> LinkedIn
+                        </a>
+                        </div>
+
+                        {/* Key Stats Bar */}
+                        <div className="mt-20 pt-10 border-t-4 border-slate-900 flex flex-col md:flex-row justify-center gap-12 md:gap-24 text-left md:text-center">
+                        <div>
+                            <div className="flex items-center justify-center gap-3 mb-2 text-blue-600">
+                            <GraduationCap size={32} strokeWidth={2.5} />
+                            </div>
+                            <p className="text-slate-900 font-black uppercase tracking-wide text-sm mb-1">Education</p>
+                            <p className="font-bold text-slate-700 text-lg">BS Mechanical Engineering</p>
+                            <p className="font-semibold text-slate-500">Univ. of Central Florida</p>
+                        </div>
+                        <div>
+                            <div className="flex items-center justify-center gap-3 mb-2 text-blue-600">
+                            <Briefcase size={32} strokeWidth={2.5} />
+                            </div>
+                            <p className="text-slate-900 font-black uppercase tracking-wide text-sm mb-1">Performance</p>
+                            <p className="font-bold text-slate-700 text-lg">GPA: 3.35</p>
+                            <p className="font-semibold text-slate-500">Last Semester: 3.45</p>
+                        </div>
+                        <div>
+                            <div className="flex items-center justify-center gap-3 mb-2 text-blue-600">
+                            <Monitor size={32} strokeWidth={2.5} />
+                            </div>
+                            <p className="text-slate-900 font-black uppercase tracking-wide text-sm mb-1">Focus</p>
+                            <p className="font-bold text-slate-700 text-lg">System Integration</p>
+                            <p className="font-semibold text-slate-500">Theme Park Engineering</p>
+                        </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Skills Section */}
+                <section id="skills" className="py-24 bg-slate-900 text-white relative">
+                    <div className="container mx-auto px-6">
+                    <div className="flex flex-col md:flex-row gap-16">
+                        <div className="md:w-1/3">
+                        <div className="md:sticky md:top-32">
+                            <h2 className="text-5xl font-black text-white mb-8 tracking-tight uppercase leading-none">
+                                Technical<br/><span className="text-blue-500">Arsenal</span>
+                            </h2>
+                            <p className="text-slate-400 mb-8 text-lg font-medium leading-relaxed">
+                                A robust engineering toolkit forged through academic rigor and hands-on fabrication.
+                            </p>
+                            
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="p-6 bg-slate-800 border-l-4 border-blue-500 hover:bg-slate-700 transition-colors">
+                                <div className="font-black text-xl text-white uppercase tracking-wider mb-1">Design</div>
+                                <p className="text-slate-400 font-medium">SolidWorks, AutoCAD, OnShape</p>
+                                </div>
+                                <div className="p-6 bg-slate-800 border-l-4 border-amber-500 hover:bg-slate-700 transition-colors">
+                                <div className="font-black text-xl text-white uppercase tracking-wider mb-1">Build</div>
+                                <p className="text-slate-400 font-medium">Machining, 3D Printing, Laser Cutting</p>
+                                </div>
+                                <div className="p-6 bg-slate-800 border-l-4 border-blue-500 hover:bg-slate-700 transition-colors">
+                                <div className="font-black text-xl text-white uppercase tracking-wider mb-1">Solve</div>
+                                <p className="text-slate-400 font-medium">Troubleshooting, Analysis, Leadership</p>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                        
+                        <div className="md:w-2/3 grid gap-8">
+                        {/* Skill Category 1 */}
+                        <div className="bg-slate-800 p-10 border-2 border-slate-700 hover:border-blue-500 transition-all shadow-none">
+                            <h3 className="text-2xl font-black text-white mb-6 flex items-center gap-3 uppercase tracking-wide">
+                            <Monitor className="text-blue-500" size={32} strokeWidth={3} />
+                            Software & Simulation
+                            </h3>
+                            <div className="flex flex-wrap gap-3">
+                            {['SolidWorks (CSWA)', 'AutoCAD', 'OnShape', 'ANSYS (Introductory)', 'MATLAB', 'Cura', 'Microsoft Office 365'].map(skill => (
+                                <span key={skill} className="px-5 py-3 bg-slate-900 text-white font-bold text-sm uppercase tracking-wide border border-slate-700">
+                                {skill}
+                                </span>
+                            ))}
+                            </div>
+                        </div>
+
+                        {/* Skill Category 2x */}
+                        <div className="bg-slate-800 p-10 border-2 border-slate-700 hover:border-amber-500 transition-all shadow-none">
+                            <h3 className="text-2xl font-black text-white mb-6 flex items-center gap-3 uppercase tracking-wide">
+                            <Wrench className="text-amber-500" size={32} strokeWidth={3} />
+                            Hardware & Manufacturing
+                            </h3>
+                            <div className="flex flex-wrap gap-3">
+                            {['FDM 3D Printing', 'Laser Cutting', 'Manual Machining', 'Soldering', 'Circuit Design', 'DMX Signal Chains', 'Audio Routing'].map(skill => (
+                                <span key={skill} className="px-5 py-3 bg-slate-900 text-white font-bold text-sm uppercase tracking-wide border border-slate-700">
+                                {skill}
+                                </span>
+                            ))}
+                            </div>
+                        </div>
+
+                        {/* Skill Category 3 */}
+                        <div className="bg-slate-800 p-10 border-2 border-slate-700 hover:border-slate-500 transition-all shadow-none">
+                            <h3 className="text-2xl font-black text-white mb-6 flex items-center gap-3 uppercase tracking-wide">
+                            <Users className="text-slate-400" size={32} strokeWidth={3} />
+                            Soft Skills & Management
+                            </h3>
+                            <div className="flex flex-wrap gap-3">
+                            {['Leadership', 'Project Management', 'Technical Troubleshooting', 'Problem Solving', 'Team Work', 'Budget Management'].map(skill => (
+                                <span key={skill} className="px-5 py-3 bg-slate-900 text-white font-bold text-sm uppercase tracking-wide border border-slate-700">
+                                {skill}
+                                </span>
+                            ))}
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+                </section>
+
+                {/* Projects Section */}
+                <section id="projects" className="py-24 px-6 bg-white">
+                    <div className="container mx-auto max-w-6xl">
+                    <div className="text-left mb-20 border-b-4 border-slate-900 pb-8">
+                        <h2 className="text-6xl font-black text-slate-900 mb-4 uppercase tracking-tighter">Selected <span className="text-blue-600">Projects</span></h2>
+                        <p className="text-xl text-slate-700 font-bold max-w-2xl">Application of mechanical principles to solve complex challenges.</p>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-12">
+                        {projectsData.map((project) => (
+                            <div 
+                                key={project.id}
+                                onClick={() => setSelectedProject(project)}
+                                className="group border-4 border-slate-900 bg-white hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all duration-200 cursor-pointer"
+                            >
+                                <div className={`h-48 ${
+                                    project.color === 'blue' ? 'bg-blue-600' : 
+                                    project.color === 'amber' ? 'bg-amber-500' : 'bg-slate-200'
+                                } flex items-center justify-center relative overflow-hidden border-b-4 border-slate-900`}>
+                                    <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(0,0,0,0.1)_25%,transparent_25%,transparent_50%,rgba(0,0,0,0.1)_50%,rgba(0,0,0,0.1)_75%,transparent_75%,transparent)] bg-[size:20px_20px]"></div>
+                                    
+                                    {/* Show first image as background for card */}
+                                    <img 
+                                        src={project.media[0].url} 
+                                        alt={project.title}
+                                        className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-multiply transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0"
+                                        loading="lazy"
+                                    />
+
+                                    <div className="relative z-10 p-4 bg-slate-900/20 backdrop-blur-sm rounded-full">
+                                        <project.icon size={48} className="text-white drop-shadow-lg" strokeWidth={2} />
+                                    </div>
+
+                                    <div className="absolute top-4 right-4 bg-white border-2 border-slate-900 px-3 py-1 text-xs font-black uppercase tracking-wider text-slate-900 z-10">
+                                        {project.status}
+                                    </div>
+                                    <div className="absolute bottom-4 right-4 bg-slate-900 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity z-10 border border-white">
+                                        View Gallery
+                                    </div>
+                                </div>
+                                <div className="p-8">
+                                    <h3 className="text-3xl font-black text-slate-900 mb-2 uppercase leading-none">{project.title}</h3>
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <span className="font-bold text-white bg-slate-900 px-2 py-1 text-sm uppercase">{project.role}</span>
+                                        <span className="text-slate-500 font-bold text-sm">{project.date}</span>
+                                    </div>
+                                    <p className="text-slate-700 font-semibold leading-relaxed">
+                                        {project.description}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    </div>
+                </section>
+
+                {/* Resume Section */}
+                <section id="resume" className="py-24 bg-slate-100 relative border-t-2 border-slate-200">
+                    <div className="container mx-auto px-6 max-w-5xl text-center">
+                        <div className="mb-12">
+                            <h2 className="text-5xl font-black text-slate-900 mb-4 uppercase tracking-tighter">My <span className="text-blue-600">Resume</span></h2>
+                            <p className="text-xl text-slate-600 font-bold max-w-2xl mx-auto">
+                                A comprehensive overview of my professional experience and education.
+                            </p>
+                        </div>
+                        
+                        <div className="bg-white p-4 border-4 border-slate-900 shadow-[10px_10px_0px_0px_rgba(15,23,42,1)] inline-block max-w-4xl w-full">
+                            {/* Updated Resume Display - Full Height, No Overlay */}
+                            <div className="w-full bg-slate-200 border-2 border-slate-100 flex items-center justify-center mb-6 overflow-hidden">
+                                <img 
+                                    src="https://res.cloudinary.com/dffo9kuhp/image/upload/f_auto,q_auto/v1770313614/47e0cd27-1_gldhdo.png" 
+                                    alt="William Russell Resume" 
+                                    className="w-full h-auto"
+                                    loading="lazy"
+                                />
+                            </div>
+                            
+                            <a 
+                                href="https://res.cloudinary.com/dffo9kuhp/image/upload/v1770313590/William_Russell_Resume_Fixed_jzrses.pdf"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="w-full block py-4 bg-blue-600 text-white font-black text-xl uppercase tracking-wider border-2 border-slate-900 hover:bg-slate-900 transition-colors flex items-center justify-center gap-3"
+                            >
+                                <Download size={24} strokeWidth={3} /> Download PDF
+                            </a>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Experience Section */}
+                <section id="experience" className="py-24 bg-slate-50 relative border-t-2 border-slate-200">
+                    <div className="container mx-auto px-6 max-w-5xl">
+                    <div className="text-center mb-16">
+                        <h2 className="text-5xl font-black text-slate-900 mb-4 uppercase tracking-tighter">Experience</h2>
+                        <div className="w-24 h-2 bg-blue-600 mx-auto"></div>
+                    </div>
+                    
+                    <div className="relative">
+                        {/* Timeline Line */}
+                        <div className="absolute left-[29px] top-0 bottom-0 w-[4px] bg-slate-300 hidden sm:block"></div>
+
+                        <div className="space-y-16">
+                        
+                        {/* Experience Item 1 - ASME */}
+                        <div className="relative pl-0 sm:pl-20">
+                            <div className="hidden sm:block absolute left-4 top-1 w-8 h-8 bg-white border-4 border-blue-600 z-10 rotate-45"></div>
+                            <div className="flex flex-col sm:flex-row justify-between sm:items-baseline mb-4">
+                            <h3 className="text-3xl font-black text-slate-900 uppercase">Internal Projects Chair</h3>
+                            <span className="text-blue-600 font-bold bg-blue-100 px-3 py-1 border border-blue-200 text-sm inline-block w-fit mt-2 sm:mt-0 uppercase">Jan 2024 – Present</span>
+                            </div>
+                            <div className="text-xl text-slate-600 mb-6 font-bold pb-2">American Society of Mechanical Engineers at UCF</div>
+                            <div className="bg-white p-8 border-l-8 border-blue-600 shadow-sm">
+                            <ul className="space-y-4 text-slate-700 leading-relaxed font-medium">
+                                <li className="flex items-start gap-3">
+                                <ChevronRight className="mt-1 text-blue-600 flex-shrink-0" size={20} strokeWidth={3} />
+                                <span>Directing the complete design-build-test cycle for a portfolio of 3 concurrent projects; managing budget distribution and resource allocation to ensure 100% mission completion across sub-teams.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                <ChevronRight className="mt-1 text-blue-600 flex-shrink-0" size={20} strokeWidth={3} />
+                                <span>Conducting formal design reviews to validate mechanical logic and system architecture; serving as the primary troubleshooter for 200+ members to resolve CAD bottlenecks and fabrication issues.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                <ChevronRight className="mt-1 text-blue-600 flex-shrink-0" size={20} strokeWidth={3} />
+                                <span>Mentoring undergraduate teams in SolidWorks optimization, 3D printing, and Design for Manufacturability (DFM) to ensure all hardware meets rigorous technical and safety standards.</span>
+                                </li>
+                            </ul>
+                            </div>
+                        </div>
+
+                        {/* Experience Item 2 - UCF Student Union */}
+                        <div className="relative pl-0 sm:pl-20">
+                            <div className="hidden sm:block absolute left-4 top-1 w-8 h-8 bg-white border-4 border-amber-500 z-10 rotate-45"></div>
+                            <div className="flex flex-col sm:flex-row justify-between sm:items-baseline mb-4">
+                            <h3 className="text-3xl font-black text-slate-900 uppercase">Event Production Technician</h3>
+                            <span className="text-amber-600 font-bold bg-amber-50 px-3 py-1 border border-amber-200 text-sm inline-block w-fit mt-2 sm:mt-0 uppercase">Jan 2026 – Present</span>
+                            </div>
+                            <div className="text-xl text-slate-600 mb-6 font-bold pb-2">UCF Student Union | Orlando, FL</div>
+                            <div className="bg-white p-8 border-l-8 border-amber-500 shadow-sm">
+                            <ul className="space-y-4 text-slate-700 leading-relaxed font-medium">
+                                <li className="flex items-start gap-3">
+                                <ChevronRight className="mt-1 text-amber-500 flex-shrink-0" size={20} strokeWidth={3} />
+                                <span>Engineer and execute technical setups for live events, applying principles of systems integration and resource management.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                <ChevronRight className="mt-1 text-amber-500 flex-shrink-0" size={20} strokeWidth={3} />
+                                <span>Integrate and operate professional audio, lighting, and camera systems (e.g., Midas M32R, E-Fly lighting, DMX control, remote cameras).</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                <ChevronRight className="mt-1 text-amber-500 flex-shrink-0" size={20} strokeWidth={3} />
+                                <span>Troubleshoot and resolve complex technical issues in real-time to ensure seamless event performance.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                <ChevronRight className="mt-1 text-amber-500 flex-shrink-0" size={20} strokeWidth={3} />
+                                <span>Design and implement efficient workflows for equipment setup and teardown, optimizing safety protocols and operational efficiency.</span>
+                                </li>
+                            </ul>
+                            </div>
+                        </div>
+
+                        {/* Experience Item 3 - SeaWorld */}
+                        <div className="relative pl-0 sm:pl-20">
+                            <div className="hidden sm:block absolute left-4 top-1 w-8 h-8 bg-white border-4 border-slate-500 z-10 rotate-45"></div>
+                            <div className="flex flex-col sm:flex-row justify-between sm:items-baseline mb-4">
+                            <h3 className="text-3xl font-black text-slate-900 uppercase">Ride Operator</h3>
+                            <span className="text-slate-600 font-bold bg-slate-200 px-3 py-1 border border-slate-300 text-sm inline-block w-fit mt-2 sm:mt-0 uppercase">Jun 2025 - Jan 2026</span>
+                            </div>
+                            <div className="text-xl text-slate-600 mb-6 font-bold pb-2">Expedition Odyssey | SeaWorld Orlando</div>
+                            <div className="bg-white p-8 border-l-8 border-slate-500 shadow-sm">
+                            <ul className="space-y-4 text-slate-700 leading-relaxed font-medium">
+                                <li className="flex items-start gap-3">
+                                <ChevronRight className="mt-1 text-slate-500 flex-shrink-0" size={20} strokeWidth={3} />
+                                <span>Oversee complex ride systems for 800+ guests/hour with 100% adherence to safety-critical protocols.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                <ChevronRight className="mt-1 text-slate-500 flex-shrink-0" size={20} strokeWidth={3} />
+                                <span>Execute rapid-response protocols for technical issues, collaborating with maintenance engineering to minimize downtime.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                <ChevronRight className="mt-1 text-slate-500 flex-shrink-0" size={20} strokeWidth={3} />
+                                <span>Monitor system functionality and maximize dispatch throughput while maintaining strict operational safety standards.</span>
+                                </li>
+                            </ul>
+                            </div>
+                        </div>
+
+                        </div>
+                    </div>
+                    </div>
+                </section>
+
+                {/* Contact Section */}
+                <section id="contact" className="py-24 px-6 bg-slate-900 border-t-8 border-blue-600">
+                    <div className="container mx-auto max-w-4xl text-center">
+                        
+                        <h2 className="text-4xl md:text-6xl font-black text-white mb-8 uppercase tracking-tighter">Let's <span className="text-blue-500">Connect</span></h2>
+                        <p className="text-slate-400 mb-12 max-w-2xl mx-auto text-xl font-bold">
+                        Contact me to discuss how I can contribute to your team.
+                        </p>
+                        
+                        <div className="flex flex-col md:flex-row justify-center gap-6">
+                        <a href="mailto:wi186300@ucf.edu" className="flex items-center justify-center gap-3 px-6 py-4 md:px-10 md:py-5 bg-blue-600 hover:bg-blue-500 text-white font-black text-base md:text-lg rounded-none uppercase tracking-wider transition-all border-2 border-transparent hover:border-white whitespace-nowrap">
+                            <Mail size={24} strokeWidth={2.5} /> wi186300@ucf.edu
+                        </a>
+                        <a href="tel:2604359818" className="flex items-center justify-center gap-3 px-6 py-4 md:px-10 md:py-5 bg-transparent hover:bg-white hover:text-slate-900 text-white font-black text-base md:text-lg rounded-none border-2 border-white uppercase tracking-wider transition-all whitespace-nowrap">
+                            <Phone size={24} strokeWidth={2.5} /> (260) 435-9818
+                        </a>
+                        <a href="https://www.linkedin.com/in/william-russell0904" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-3 px-6 py-4 md:px-10 md:py-5 bg-transparent hover:bg-white hover:text-slate-900 text-white font-black text-base md:text-lg rounded-none border-2 border-white uppercase tracking-wider transition-all whitespace-nowrap">
+                            <Linkedin size={24} strokeWidth={2.5} /> LinkedIn
+                        </a>
+                        </div>
+                    </div>
+                </section>
+
+                <footer className="py-12 bg-slate-950 text-center text-slate-500 text-sm font-bold uppercase tracking-widest">
+                    <p>© {new Date().getFullYear()} William Russell</p>
+                    <p className="mt-2 text-slate-600">Mechanical Engineer • UCF</p>
+                </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
